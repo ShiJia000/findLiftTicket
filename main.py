@@ -15,6 +15,7 @@ AGE_GROUP = 'Adult'
 URL = 'https://www.stevenspass.com/plan-your-trip/lift-access/tickets.aspx'
 WEB_DRIVER = './chromedriver'
 TICKET_ELEMENT = 'liftTicketsResults__ticket'
+MAX_NOTIFICATION = 5
 
 
 # This address must be verified with Amazon SES.
@@ -23,7 +24,7 @@ RECIPIENT = ['raychen0411@gmail.com', 'jiashi1994@gmail.com']
 ACCESS_KEY = ''
 SECRET_KEY = ''
 AWS_REGION = 'us-east-1'
-SUBJECT = 'SP lift ticket is available now!'
+SUBJECT = 'SP lift ticket is available on '
 
 # The email body for recipients with non-HTML email clients.
 BODY_TEXT = ('Link: https://www.stevenspass.com/plan-your-trip/lift-access/tickets.aspx')
@@ -40,7 +41,7 @@ CHARSET = 'UTF-8'
 
 
 def find_tickets(date):
-    print(str(datetime.datetime.now()) + ' Start find ticket: ' + date)
+    print(str(datetime.datetime.now()) + ' start finding ticket: ' + date)
     # parse url
     params = {
         'startDate': date,
@@ -51,6 +52,7 @@ def find_tickets(date):
     print(url)
 
     dr = webdriver.Chrome(WEB_DRIVER)
+    cnt = 0
     while True:
         dr.implicitly_wait(10)
         dr.get(url)
@@ -59,12 +61,14 @@ def find_tickets(date):
             print('Tickets found!!')
             print(my_dynamic_element.text)
             send_email(date)
-            break
+            cnt += 1
+            if cnt > MAX_NOTIFICATION:
+                break
         except selenium.common.exceptions.NoSuchElementException:
             print('No tickets found')
 
-        print(str(datetime.datetime.now()) + ' wait 1 min...')
-        time.sleep(60)
+        print(str(datetime.datetime.now()) + ' wait 30 sec...')
+        time.sleep(30)
 
 
 def parse_url(params, url):
