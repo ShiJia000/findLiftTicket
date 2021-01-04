@@ -19,7 +19,6 @@ TICKET_ELEMENT = 'liftTicketsResults__ticket'
 
 # This address must be verified with Amazon SES.
 SENDER = 'raychen0411@gmail.com'
-RECIPIENT = ['raychen0411@gmail.com', 'jiashi1994@gmail.com']
 ACCESS_KEY = ''
 SECRET_KEY = ''
 AWS_REGION = 'us-east-1'
@@ -39,7 +38,7 @@ BODY_HTML = '''<html>
 CHARSET = 'UTF-8'
 
 
-def find_tickets(date):
+def find_tickets(date, address_list):
     print(str(datetime.datetime.now()) + ' Start find ticket: ' + date)
     # parse url
     params = {
@@ -58,7 +57,7 @@ def find_tickets(date):
             my_dynamic_element = dr.find_element_by_class_name(TICKET_ELEMENT)
             print('Tickets found!!')
             print(my_dynamic_element.text)
-            send_email(date)
+            send_email(date, address_list)
             break
         except selenium.common.exceptions.NoSuchElementException:
             print('No tickets found')
@@ -75,7 +74,7 @@ def parse_url(params, url):
     return urlparse.urlunparse(url_parts)
 
 
-def send_email(date):
+def send_email(date, address_list):
     client = boto3.client('ses',
                           region_name='us-east-1',
                           aws_access_key_id=ACCESS_KEY,
@@ -83,7 +82,7 @@ def send_email(date):
     try:
         response = client.send_email(
             Destination={
-                'ToAddresses': RECIPIENT
+                'ToAddresses': address_list
             },
             Message={
                 'Body': {
@@ -112,7 +111,13 @@ def send_email(date):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        raise Exception('[ERROR] Need 2 arguments, \'python main.py date email\'')
     if not ACCESS_KEY or not SECRET_KEY:
         raise Exception('[ERROR] AWS account access key or secret key is '
                         'missing')
-    find_tickets(sys.argv[1])
+
+    recipient_list = []
+    for i in range(2, len(sys.argv)):
+        recipient_list.append(sys.argv[i])
+    find_tickets(sys.argv[1], recipient_list)
