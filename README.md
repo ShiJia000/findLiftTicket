@@ -9,5 +9,5 @@ Requires
 
 Command
 ```
-python main.py 01/01/2021 
+python main.py 01/01/2021 xxx@gmail.com 
 ```
