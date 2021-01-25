@@ -7,7 +7,7 @@ import urllib.parse as urlparse
 from urllib.parse import urlencode
 import boto3
 from botocore.exceptions import ClientError
-
+from audioplayer import AudioPlayer
 
 # Stevens pass ticket filters
 NUMBER_OF_DAYS = 1
@@ -16,7 +16,6 @@ URL = 'https://www.stevenspass.com/plan-your-trip/lift-access/tickets.aspx'
 WEB_DRIVER = './chromedriver'
 TICKET_ELEMENT = 'liftTicketsResults__ticket'
 MAX_NOTIFICATION = 5
-
 
 # This address must be verified with Amazon SES.
 SENDER = 'raychen0411@gmail.com'
@@ -37,6 +36,9 @@ BODY_HTML = '''<html>
     </html>
             '''
 CHARSET = 'UTF-8'
+
+# signal for play sound
+play_sound = False
 
 
 def find_tickets(date, address_list):
@@ -60,10 +62,17 @@ def find_tickets(date, address_list):
             print('Tickets found!!')
             print(my_dynamic_element.text)
 
-            send_email(date, address_list)
-            cnt += 1
-            if cnt > MAX_NOTIFICATION:
-                break
+            if play_sound:
+                # play sound
+                print('Play sound...')
+                AudioPlayer("sound.mp3").play(block=True)
+            else:
+                # send email
+                send_email(date, address_list)
+                cnt += 1
+                if cnt > MAX_NOTIFICATION:
+                    break
+
         except selenium.common.exceptions.NoSuchElementException:
             print('No tickets found')
 
@@ -116,9 +125,13 @@ def send_email(date, address_list):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        raise Exception('[ERROR] Need at least 1 arguments, \'python main.py date\'')
+
     if len(sys.argv) < 3:
-        raise Exception('[ERROR] Need 2 arguments, \'python main.py date email\'')
-    if not ACCESS_KEY or not SECRET_KEY:
+        play_sound = True
+
+    if not play_sound and (not ACCESS_KEY or not SECRET_KEY):
         raise Exception('[ERROR] AWS account access key or secret key is '
                         'missing')
 
